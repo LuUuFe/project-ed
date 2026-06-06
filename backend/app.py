@@ -5,124 +5,113 @@ Módulo Servidor Backend — Projeto 02: Carrinho de Compras
 Este módulo implementa uma API RESTful utilizando a framework Flask. 
 O seu propósito central é gerir as operações de um carrinho de compras, 
 aplicando os conceitos de Estruturas de Dados exigidos na disciplina.
-
-Em estrita obediência aos requisitos, a lógica de armazenamento e 
-manipulação dos dados foi implementada nativamente através de uma classe 
-orientada a objetos que simula o comportamento de um Array.
 """
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+import datetime
 
-# Instanciação da aplicação web e configuração de partilha de recursos (CORS)
 app = Flask(__name__)
 CORS(app)
 
-
+# ------------------------------------------------------------------
+# ESTRUTURA 1: ARRAY (CARRINHO)
+# ------------------------------------------------------------------
 class ArrayCarrinho:
-    """
-    Estrutura de Dados: Array (Encapsulamento)
-    
-    Esta classe gere os produtos inseridos no carrinho de compras.
-    Utiliza uma lista nativa do Python como estrutura de base, operando
-    de forma sequencial para inserções, buscas e remoções.
-    """
-
     def __init__(self):
-        """
-        Inicializa a estrutura do Array e o controlador de identificadores únicos.
-        """
-        self.itens = []        # Array principal para armazenamento dos produtos
-        self.proximo_id = 1    # Variável de controlo para gerar IDs incrementais
+        self.itens = []
+        self.proximo_id = 1
 
-    def inserir(self, nome: str, preco: float, quantidade: int, estoque: int) -> dict:
-        """
-        Insere um novo produto no final do Array.
-        Complexidade: O(1) amortizado.
-
-        Parâmetros:
-            nome (str): A designação do produto.
-            preco (float): O valor unitário do produto.
-            quantidade (int): A quantidade desejada pelo utilizador.
-            estoque (int): A quantidade disponível em armazém.
-
-        Retorno:
-            dict: O dicionário representativo do produto recém-inserido.
-        """
+    def inserir(self, nome: str, preco: float, quantidade: int, estoque: int, id_existente: int = None) -> dict:
         produto = {
-            "id": self.proximo_id,
+            "id": id_existente if id_existente else self.proximo_id,
             "nome": nome,
             "preco": preco,
             "quantidade": quantidade,
             "estoque": estoque
         }
         self.itens.append(produto)
-        self.proximo_id += 1
-        
+        if not id_existente:
+            self.proximo_id += 1
+        # Ordenação básica para manter consistência ao desfazer remoções
+        self.itens.sort(key=lambda x: x["id"])
         return produto
 
     def buscar_indice(self, produto_id: int) -> int:
-        """
-        Executa uma busca linear no Array para localizar o índice de um produto.
-        Complexidade: O(n).
-
-        Parâmetros:
-            produto_id (int): O identificador único do produto a procurar.
-
-        Retorno:
-            int: O índice do produto no Array, ou -1 caso não seja encontrado.
-        """
         for i, produto in enumerate(self.itens):
             if produto["id"] == produto_id:
                 return i
         return -1
 
     def remover_por_id(self, produto_id: int) -> dict:
-        """
-        Remove um produto do Array com base no seu identificador.
-        Complexidade: O(n).
-
-        Parâmetros:
-            produto_id (int): O identificador do produto a ser removido.
-
-        Retorno:
-            dict ou None: O produto removido, ou None se o produto não existir.
-        """
         idx = self.buscar_indice(produto_id)
         if idx != -1:
-            return self.itens.pop(idx) # Remoção por índice
+            return self.itens.pop(idx)
         return None
 
     def calcular_total(self) -> float:
-        """
-        Percorre o Array de forma sequencial para calcular o valor total do carrinho.
-        Complexidade: O(n).
-
-        Retorno:
-            float: O somatório do preço pela quantidade de todos os produtos, 
-                   arredondado a duas casas decimais.
-        """
         return round(sum(p["preco"] * p["quantidade"] for p in self.itens), 2)
 
     def obter_todos(self) -> list:
-        """
-        Retorna a estrutura completa com todos os produtos armazenados.
-        """
         return self.itens
     
     def tamanho(self) -> int:
-        """
-        Retorna o número de elementos atualmente alocados no Array.
-        """
         return len(self.itens)
 
+    def esvaziar(self):
+        self.itens = []
 
 # ------------------------------------------------------------------
-# INSTANCIAÇÃO DA ESTRUTURA DE DADOS
+# ESTRUTURA 2: PILHA (DESFAZER AÇÕES)
 # ------------------------------------------------------------------
-# Criação do objeto global que representará o carrinho em memória
+class PilhaAcoes:
+    def __init__(self):
+        self.acoes = []
+
+    def empilhar(self, acao: dict):
+        self.acoes.append(acao)
+
+    def desempilhar(self) -> dict:
+        if not self.esta_vazia():
+            return self.acoes.pop()
+        return None
+
+    def esta_vazia(self) -> bool:
+        return len(self.acoes) == 0
+
+    def esvaziar(self):
+        self.acoes = []
+
+# ------------------------------------------------------------------
+# ESTRUTURA 3: LISTA ENCADEADA (HISTÓRICO DE COMPRAS)
+# ------------------------------------------------------------------
+class No:
+    def __init__(self, dado):
+        self.dado = dado
+        self.proximo = None
+
+class ListaEncadeada:
+    def __init__(self):
+        self.cabeca = None
+
+    def inserir_no_inicio(self, dado):
+        novo_no = No(dado)
+        novo_no.proximo = self.cabeca
+        self.cabeca = novo_no
+
+    def obter_todos(self) -> list:
+        elementos = []
+        atual = self.cabeca
+        while atual:
+            elementos.append(atual.dado)
+            atual = atual.proximo
+        return elementos
+
+
+# Instanciação Global das Estruturas
 meu_carrinho = ArrayCarrinho()
-
+historico_acoes = PilhaAcoes()
+historico_compras = ListaEncadeada()
 
 # ------------------------------------------------------------------
 # CONTROLADORES DA API (ROTAS)
@@ -130,65 +119,96 @@ meu_carrinho = ArrayCarrinho()
 
 @app.route("/api/carrinho", methods=["GET"])
 def listar_carrinho():
-    """
-    Rota (GET): Retorna a totalidade dos itens presentes no Array, bem como
-    o valor financeiro total acumulado e a quantidade de itens.
-    """
     return jsonify({
         "produtos": meu_carrinho.obter_todos(),
         "total": meu_carrinho.calcular_total(),
         "quantidade_itens": meu_carrinho.tamanho()
     }), 200
 
-
 @app.route("/api/carrinho", methods=["POST"])
 def adicionar_produto():
-    """
-    Rota (POST): Interceta a requisição do frontend, valida a tipologia
-    dos dados e invoca a inserção do produto na estrutura de Array.
-    """
     dados = request.get_json(silent=True)
-
-    # Validação da presença do corpo da requisição
     if not dados:
-        return jsonify({"erro": "O corpo da requisição afigura-se inválido ou inexistente."}), 400
+        return jsonify({"erro": "Corpo da requisição inválido."}), 400
 
     nome = str(dados.get("nome", "")).strip()
-    
-    # Tratamento rigoroso de tipologia de dados
     try:
         preco = float(dados["preco"])
         quantidade = int(dados["quantidade"])
         estoque = int(dados["estoque"])
     except (KeyError, ValueError, TypeError):
-        return jsonify({"erro": "Os parâmetros 'nome', 'preco', 'quantidade' e 'estoque' são mandatórios e devem deter os tipos adequados."}), 400
+        return jsonify({"erro": "Parâmetros numéricos com tipologia inadequada."}), 400
 
-    # Validação de coerência lógica dos valores inseridos
-    if not nome:
-        return jsonify({"erro": "A designação do produto não pode encontrar-se vazia."}), 400
-    if preco < 0 or quantidade < 1 or estoque < 0:
-        return jsonify({"erro": "Foram introduzidos valores numéricos desprovidos de lógica de negócio."}), 400
+    if not nome or preco < 0 or quantidade < 1 or estoque < 0:
+        return jsonify({"erro": "Dados inseridos carecem de coerência mercadológica."}), 400
 
-    # Invocação do método de inserção encapsulado na classe
     produto_inserido = meu_carrinho.inserir(nome, preco, quantidade, estoque)
+    
+    # Empilhar a ação para permitir a sua posterior reversão
+    historico_acoes.empilhar({"tipo": "adicionar", "produto": produto_inserido})
 
     return jsonify(produto_inserido), 201
 
-
 @app.route("/api/carrinho/<int:produto_id>", methods=["DELETE"])
 def remover_produto(produto_id):
-    """
-    Rota (DELETE): Recebe o identificador (ID) via parâmetro de URL e
-    remove o produto correspondente do Array.
-    """
     removido = meu_carrinho.remover_por_id(produto_id)
-    
     if removido is None:
-        return jsonify({"erro": "O produto requisitado não foi localizado na estrutura."}), 404
+        return jsonify({"erro": "Produto não localizado."}), 404
 
+    # Empilhar a ação de remoção
+    historico_acoes.empilhar({"tipo": "remover", "produto": removido})
     return jsonify(removido), 200
 
+@app.route("/api/desfazer", methods=["POST"])
+def desfazer_acao():
+    """Rota para reverter a última ação processada (Desempilhar)."""
+    acao = historico_acoes.desempilhar()
+    if not acao:
+        return jsonify({"erro": "Não existem ações precedentes a serem desfeitas."}), 400
+
+    if acao["tipo"] == "adicionar":
+        # Desfazer adição significa remover o item
+        meu_carrinho.remover_por_id(acao["produto"]["id"])
+    elif acao["tipo"] == "remover":
+        # Desfazer remoção significa inserir o item novamente
+        p = acao["produto"]
+        meu_carrinho.inserir(p["nome"], p["preco"], p["quantidade"], p["estoque"], id_existente=p["id"])
+
+    return jsonify({"mensagem": "Ação devidamente desfeita."}), 200
+
+@app.route("/api/finalizar", methods=["POST"])
+def finalizar_compra():
+    """Rota para efetivar a transação, atualizar estoque e registrar no histórico."""
+    if meu_carrinho.tamanho() == 0:
+        return jsonify({"erro": "A transação não pode ser concluída com o carrinho vazio."}), 400
+
+    total = meu_carrinho.calcular_total()
+    itens_comprados = meu_carrinho.obter_todos().copy()
+
+    # Simulação da dedução de estoque para o histórico
+    for item in itens_comprados:
+        item["estoque"] = max(0, item["estoque"] - item["quantidade"])
+
+    recibo_compra = {
+        "id_transacao": datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
+        "data": datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+        "total": total,
+        "quantidade_itens": len(itens_comprados),
+        "itens": itens_comprados
+    }
+
+    # Inserção no início da Lista Encadeada (ordem cronológica decrescente)
+    historico_compras.inserir_no_inicio(recibo_compra)
+    
+    meu_carrinho.esvaziar()
+    historico_acoes.esvaziar() # Purga a pilha, visto que a sessão de compras foi finalizada
+
+    return jsonify({"mensagem": "Transação finalizada com êxito.", "recibo": recibo_compra}), 200
+
+@app.route("/api/historico", methods=["GET"])
+def listar_historico():
+    """Rota para consultar os registros presentes na Lista Encadeada."""
+    return jsonify(historico_compras.obter_todos()), 200
 
 if __name__ == "__main__":
-    # Inicialização do servidor em modo de depuração para ambiente de desenvolvimento local
     app.run(debug=True, port=5000)

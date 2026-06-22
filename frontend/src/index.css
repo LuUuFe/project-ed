@@ -7,6 +7,13 @@
     background-color: #0e0e10;
     color: #f0efe8;
     font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+  }
+
+  ::selection {
+    background-color: rgba(240, 192, 64, 0.24);
+    color: #ffffff;
   }
 }
 
@@ -25,3 +32,10 @@
 
 .animate-fadeUp  { animation: fadeUp 0.35s ease both; }
 .animate-popIn   { animation: popIn  0.25s ease both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fadeUp,
+  .animate-popIn {
+    animation: none;
+  }
+}

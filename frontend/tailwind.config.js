@@ -14,6 +14,9 @@ export default {
         accent:  '#f0c040',
         danger:  '#e05a2b',
         success: '#4ecb71',
+      },
+      boxShadow: {
+        soft: '0 18px 45px rgba(0, 0, 0, 0.22)',
       }
     }
   },

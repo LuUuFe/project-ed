@@ -1,34 +1,66 @@
+function formatarMoeda(valor) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(valor)
+}
+
 export default function HistoricoCompras({ historico }) {
   return (
-    <section className="bg-[#0e0e10] border border-dashed border-border rounded-2xl p-6 animate-fadeUp mt-6">
-      <div className="flex items-center justify-between mb-5">
-        <p className="font-display text-[11px] font-bold tracking-[2px] uppercase text-zinc-500">
-          Histórico de Transações (Lista Encadeada)
-        </p>
+    <section className="rounded-lg border border-dashed border-border bg-bg p-5 shadow-soft animate-fadeUp">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <div>
+          <p className="font-display text-[11px] font-bold uppercase tracking-[2px] text-zinc-500">
+            Histórico de Compras
+          </p>
+          <p className="mt-1 text-xs text-zinc-600">Lista encadeada · inserção no início</p>
+        </div>
+        <span className="rounded-lg border border-border bg-surface px-2.5 py-1 text-xs text-zinc-400">
+          {historico.length} registro(s)
+        </span>
       </div>
 
-      <div className="space-y-3">
-        {historico.map((compra, index) => (
-          <div key={compra.id_transacao} className="bg-[#18181c] border border-border rounded-xl p-4 animate-popIn" style={{ animationDelay: `${index * 50}ms` }}>
-            <div className="flex justify-between items-center mb-3 pb-3 border-b border-border/50">
-              <div>
-                <span className="text-xs font-mono text-accent">ID: {compra.id_transacao}</span>
-                <span className="text-xs text-zinc-500 ml-3">Data: {compra.data}</span>
-              </div>
-              <span className="font-display font-bold text-success">R$ {compra.total.toFixed(2)}</span>
-            </div>
-            
-            <div className="space-y-1">
-              {compra.itens.map(item => (
-                <div key={item.id} className="flex justify-between text-xs text-zinc-400">
-                  <span>- {item.nome} (x{item.quantidade})</span>
-                  <span>Estoque remanescente: {item.estoque}</span>
+      {historico.length === 0 ? (
+        <div className="rounded-lg border border-border bg-surface/40 px-4 py-8 text-center">
+          <p className="font-display text-lg font-bold text-white">Histórico vazio</p>
+          <p className="mt-2 text-sm text-zinc-500">As compras finalizadas aparecerão aqui.</p>
+        </div>
+      ) : (
+        <div className="relative space-y-4 border-l border-border pl-5">
+          {historico.map((compra, index) => (
+            <article
+              key={compra.id_transacao}
+              className="relative rounded-lg border border-border bg-surface p-4 animate-popIn"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <span className="absolute -left-[27px] top-5 h-3 w-3 rounded-full border-2 border-bg bg-accent" />
+              <div className="mb-3 flex flex-col gap-2 border-b border-border/70 pb-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-mono text-xs text-accent">#{compra.id_transacao}</p>
+                  <p className="mt-1 text-xs text-zinc-500">{compra.data}</p>
                 </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+                <div className="text-left sm:text-right">
+                  <p className="font-display text-lg font-bold text-success">
+                    {formatarMoeda(compra.total)}
+                  </p>
+                  <p className="text-xs text-zinc-500">
+                    {compra.quantidade_unidades || compra.quantidade_itens} unidade(s)
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {compra.itens.map(item => (
+                  <div key={`${compra.id_transacao}-${item.id}`} className="flex flex-col gap-1 text-xs text-zinc-400 sm:flex-row sm:items-center sm:justify-between">
+                    <span>{item.nome} · x{item.quantidade}</span>
+                    <span>Estoque restante: {item.estoque}</span>
+                  </div>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
     </section>
   )
 }

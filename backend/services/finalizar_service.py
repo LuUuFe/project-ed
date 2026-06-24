@@ -7,18 +7,17 @@ class FinalizarService:
         if meu_carrinho.tamanho() == 0:
             raise ValueError("A compra não pode ser finalizada com o carrinho vazio.")
 
+        # verifica estoque
         sem_estoque = [
-            produto
-            for produto in meu_carrinho.obter_todos()
-            if produto["quantidade"] > produto["estoque"]
+            p for p in meu_carrinho.obter_todos()
+            if p.quantidade > p.estoque
         ]
         if sem_estoque:
-            nomes = ", ".join(produto["nome"] for produto in sem_estoque)
+            nomes = ", ".join(p.nome for p in sem_estoque)
             raise ValueError(f"Estoque insuficiente para: {nomes}.")
 
         total = meu_carrinho.calcular_total()
-        itens_comprados = [item.copy() for item in meu_carrinho.obter_todos()]
-
+        itens_comprados = [p.to_dict() for p in meu_carrinho.obter_todos()]
         for item in itens_comprados:
             item["subtotal"] = round(item["preco"] * item["quantidade"], 2)
             item["estoque_inicial"] = item["estoque"]
@@ -37,5 +36,4 @@ class FinalizarService:
         historico_compras.inserir_no_inicio(recibo_compra)
         meu_carrinho.esvaziar()
         historico_acoes.esvaziar()
-
         return recibo_compra

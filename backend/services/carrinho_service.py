@@ -1,7 +1,6 @@
 import math
 from config.extensions import meu_carrinho, historico_acoes
 from utils.validators import validar_produto, converter_preco, converter_inteiro
-from services.busca_service import normalizar_texto
 from services.ordenacao_service import normalizar_ordenacao, OPCOES_ORDENACAO
 
 class CarrinhoService:
@@ -27,7 +26,7 @@ class CarrinhoService:
             "quantidade_itens": meu_carrinho.tamanho(),
             "quantidade_resultados": len(produtos_resultado),
             "baixo_estoque": meu_carrinho.contar_baixo_estoque(),
-            "quantidade_compras": 0,  # será preenchido pelo serviço de histórico? Deixamos para o frontend buscar separadamente
+            "quantidade_compras": 0,
             "filtros": {
                 "busca": busca,
                 "modo_busca": modo_busca,
@@ -41,7 +40,6 @@ class CarrinhoService:
     def adicionar(dados):
         if not isinstance(dados, dict):
             raise ValueError("Envie os dados do produto em formato JSON válido.")
-
         nome = str(dados.get("nome", "")).strip()
         try:
             preco = converter_preco(dados["preco"])
@@ -49,19 +47,17 @@ class CarrinhoService:
             estoque = converter_inteiro(dados["estoque"])
         except (KeyError, ValueError, TypeError):
             raise ValueError("Informe preço, quantidade e estoque com valores numéricos válidos.")
-
         erro = validar_produto(nome, preco, quantidade, estoque)
         if erro:
             raise ValueError(erro)
-
         preco = round(preco, 2)
         produto_inserido = meu_carrinho.inserir(nome, preco, quantidade, estoque)
-        historico_acoes.empilhar({"tipo": "adicionar", "produto": produto_inserido})
-        return produto_inserido
+        historico_acoes.empilhar({"tipo": "adicionar", "produto": produto_inserido.to_dict()})
+        return produto_inserido.to_dict()
 
     @staticmethod
     def remover(produto_id):
         removido = meu_carrinho.remover_por_id(produto_id)
         if removido is not None:
-            historico_acoes.empilhar({"tipo": "remover", "produto": removido})
-        return removido
+            historico_acoes.empilhar({"tipo": "remover", "produto": removido.to_dict()})
+        return removido.to_dict() if removido else None

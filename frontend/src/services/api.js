@@ -10,18 +10,37 @@ async function handleResponse(res, fallbackMsg) {
 
 function buildQuery(params) {
   const urlParams = new URLSearchParams()
+  
+  // Mapeia os nomes dos parâmetros para o que o backend espera
+  const paramMap = {
+    'busca': 'busca',
+    'ordenacao': 'ordenar',    // ← Frontend usa 'ordenacao', backend espera 'ordenar'
+    'modo_busca': 'modo',
+    'q': 'q',
+    'sort': 'sort'
+  }
+  
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
-      urlParams.set(key, value)
+      // Usa o nome mapeado ou o original
+      const mappedKey = paramMap[key] || key
+      urlParams.set(mappedKey, value)
     }
   })
+  
   const query = urlParams.toString()
   return query ? `?${query}` : ''
 }
 
 export const api = {
   async getCarrinho(filtros = {}) {
-    const query = buildQuery(filtros)
+    // Garante que os parâmetros padrão estão corretos
+    const params = {
+      busca: filtros.busca || '',
+      ordenacao: filtros.ordenacao || 'cadastro',
+      ...filtros
+    }
+    const query = buildQuery(params)
     const res = await fetch(`${API_BASE}/carrinho${query}`)
     return handleResponse(res, 'Falha ao carregar carrinho.')
   },

@@ -7,7 +7,6 @@ class DesfazerService:
         if not acao:
             raise ValueError("Não existem ações anteriores para desfazer.")
         if acao["tipo"] == "adicionar":
-            # remove do carrinho
             produto_id = acao["produto"]["id"]
             meu_carrinho.remover_por_id(produto_id)
         elif acao["tipo"] == "remover":

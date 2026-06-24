@@ -21,6 +21,8 @@ class CarrinhoService:
         return {
             "produtos": produtos_resultado,
             "produtos_carrinho": meu_carrinho.obter_copia(),
+            "hash_buckets": meu_carrinho.obter_hash_buckets(),
+            "pilha_tamanho": historico_acoes.tamanho(),
             "total": total,
             "total_resultado": total_resultado,
             "quantidade_itens": meu_carrinho.tamanho(),

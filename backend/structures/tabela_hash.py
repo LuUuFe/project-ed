@@ -18,7 +18,7 @@ class TabelaHash:
             atual = self.buckets[indice]
             while atual.proximo:
                 if atual.dado[0] == chave:
-                    atual.dado = (chave, valor)  # atualiza
+                    atual.dado = (chave, valor)
                     return
                 atual = atual.proximo
             if atual.dado[0] == chave:
@@ -58,3 +58,15 @@ class TabelaHash:
                 resultados.append(atual.dado[1])
                 atual = atual.proximo
         return resultados
+
+    def obter_buckets(self) -> list:
+        """Retorna lista de listas com os valores de cada bucket para visualização."""
+        buckets_lista = []
+        for bucket in self.buckets:
+            bucket_vals = []
+            atual = bucket
+            while atual:
+                bucket_vals.append(atual.dado[1])
+                atual = atual.proximo
+            buckets_lista.append(bucket_vals)
+        return buckets_lista

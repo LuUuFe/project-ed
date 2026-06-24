@@ -5,7 +5,7 @@ class PilhaAcoes:
     def empilhar(self, acao: dict):
         self.acoes.append(acao)
 
-    def desempilhar(self) -> dict:
+    def desempilhar(self) -> dict | None:
         if not self.esta_vazia():
             return self.acoes.pop()
         return None
@@ -15,3 +15,11 @@ class PilhaAcoes:
 
     def esvaziar(self):
         self.acoes = []
+
+    def tamanho(self) -> int:
+        return len(self.acoes)
+
+    def topo(self) -> dict | None:
+        if not self.esta_vazia():
+            return self.acoes[-1]
+        return None

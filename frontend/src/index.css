@@ -1,41 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  * {
+    @apply border-border;
+  }
   body {
-    background-color: #0e0e10;
-    color: #f0efe8;
-    font-family: 'DM Sans', sans-serif;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: geometricPrecision;
+    @apply bg-bg text-zinc-100 font-body antialiased;
   }
-
-  ::selection {
-    background-color: rgba(240, 192, 64, 0.24);
-    color: #ffffff;
+  ::-webkit-scrollbar {
+    @apply w-2;
   }
-}
-
-@layer utilities {
-  .font-display { font-family: 'Syne', sans-serif; }
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes popIn {
-  from { opacity: 0; transform: scale(0.92); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-.animate-fadeUp  { animation: fadeUp 0.35s ease both; }
-.animate-popIn   { animation: popIn  0.25s ease both; }
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-fadeUp,
-  .animate-popIn {
-    animation: none;
+  ::-webkit-scrollbar-track {
+    @apply bg-bg;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
   }
 }

@@ -7,7 +7,6 @@ class FinalizarService:
         if meu_carrinho.tamanho() == 0:
             raise ValueError("A compra não pode ser finalizada com o carrinho vazio.")
 
-        # verifica estoque
         sem_estoque = [
             p for p in meu_carrinho.obter_todos()
             if p.quantidade > p.estoque

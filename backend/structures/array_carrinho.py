@@ -5,9 +5,9 @@ from services.ordenacao_service import normalizar_ordenacao, OPCOES_ORDENACAO
 
 class ArrayCarrinho:
     def __init__(self):
-        self.itens = []          # lista de Produto
+        self.itens = []
         self.proximo_id = 1
-        self.hash_indice = TabelaHash()   # índice rápido por id
+        self.hash_indice = TabelaHash()
 
     def inserir(self, nome: str, preco: float, quantidade: int, estoque: int, id_existente: int = None) -> Produto:
         if id_existente:
@@ -31,7 +31,6 @@ class ArrayCarrinho:
         produto = self.buscar_por_id(produto_id)
         if produto is None:
             return None
-        # remove do array
         for i, p in enumerate(self.itens):
             if p.id == produto_id:
                 del self.itens[i]
@@ -86,3 +85,8 @@ class ArrayCarrinho:
     def esvaziar(self):
         self.itens = []
         self.hash_indice = TabelaHash()
+
+    def obter_hash_buckets(self) -> list[list[dict]]:
+        """Retorna os buckets da hash com produtos serializados."""
+        buckets = self.hash_indice.obter_buckets()
+        return [[p.to_dict() for p in bucket] for bucket in buckets]

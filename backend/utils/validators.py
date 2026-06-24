@@ -37,4 +37,4 @@ def validar_produto(nome, preco, quantidade, estoque):
     if quantidade > estoque:
         return "A quantidade desejada não pode ser maior que o estoque disponível."
 
-    return None  # válido
+    return None
